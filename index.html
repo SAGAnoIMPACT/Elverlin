@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#16152b">
+  <title>Visual Novel Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+      color: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .game {
+      width: min(100%, 960px);
+      overflow: hidden;
+    }
+
+    .game.is-collapsed {
+      position: fixed;
+      bottom: 18px;
+      left: 18px;
+      z-index: 10;
+      width: auto;
+      overflow: visible;
+    }
+
+    .stage {
+      position: relative;
+      min-height: clamp(330px, 58vw, 520px);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .game.is-collapsed .stage,
+    .game.is-collapsed .dialogue {
+      display: none;
+    }
+
+    .chat-launcher {
+      display: none;
+      width: 112px;
+      height: 112px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .game.is-collapsed .chat-launcher {
+      display: grid;
+      place-items: center;
+    }
+
+    .chat-launcher img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px #0008);
+    }
+
+    .character {
+      position: absolute;
+      bottom: -3%;
+      left: 4%;
+      width: min(61%, 390px);
+      height: 94%;
+      object-fit: contain;
+      object-position: center bottom;
+      filter: drop-shadow(0 12px 18px #11182766);
+      animation: appear 550ms ease-out both;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dialogue {
+      position: relative;
+      margin: -2px 18px 18px;
+      padding: 22px 24px 18px;
+      border: 1px solid #ffffff45;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #211d3bed, #171629f5);
+      box-shadow: 0 12px 28px #08081470;
+    }
+
+    .speaker {
+      position: absolute;
+      top: -17px;
+      left: 22px;
+      padding: 5px 16px;
+      border: 1px solid #ffffff55;
+      border-radius: 999px;
+      background: #a76eaa;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .line {
+      min-height: 3.2em;
+      margin: 3px 0 15px;
+      color: #fff;
+      font-size: clamp(1rem, 2.4vw, 1.2rem);
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hint, .counter { color: #c9c4df; font-size: 0.82rem; }
+
+    button {
+      min-height: 42px;
+      padding: 9px 18px;
+      border: 1px solid #ffffff4a;
+      border-radius: 10px;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 140ms ease, background 140ms ease;
+    }
+
+    button:hover { transform: translateY(-2px); }
+    button:focus-visible { outline: 3px solid #f7d8ff; outline-offset: 3px; }
+
+    .next {
+      background: #9266a8;
+    }
+
+    .next:hover { background: #a77cbd; }
+
+    .choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+
+    .choice {
+      flex: 1 1 210px;
+      background: #383253;
+      text-align: left;
+    }
+
+    .choice:hover { background: #51466f; }
+
+    @media (max-width: 560px) {
+      body { padding: 10px; }
+      .stage { min-height: 390px; }
+      .character { left: 2%; width: 82%; height: 87%; }
+      .dialogue { margin: -2px 10px 10px; padding: 22px 16px 15px; }
+      .hint { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" aria-label="ตัวอย่างเกม Visual Novel">
+    <section class="stage" aria-label="ฉากยามเย็น">
+      <img class="character" src="Character/Elverlin.PNG" alt="ตัวละคร Elverlin">
+    </section>
+    <section class="dialogue" aria-live="polite">
+      <div class="speaker" id="speaker">เอลเวอร์ลิน</div>
+      <p class="line" id="line"></p>
+      <div class="choices" id="choices" hidden></div>
+      <div class="controls">
+        <span class="hint">คลิกที่หน้าจอ หรือกด Enter เพื่ออ่านข้อความถัดไป</span>
+        <span class="counter" id="counter"></span>
+        <button class="next" id="next" type="button">ถัดไป　›</button>
+      </div>
+    </section>
+    <button class="chat-launcher" id="chat-launcher" type="button" aria-label="เปิดบทสนทนากับเอลเวอร์ลิน" title="คุยกับเอลเวอร์ลิน">
+      <img src="Character/Elverlinicon.PNG" alt="">
+    </button>
+  </main>
+  <script>
+    const scenes = [
+      { speaker: "เอลเวอร์ลิน", text: "อ๊ะ!? นี่น่ะคือแผนที่ของเมืองนี้ยังไงล่ะ\nจริงสิ เมืองนี้มีชื่อว่า Dead Garden" },
+      { speaker: "เอลเวอร์ลิน", text: "เอ่อ...มันถูกเรียกแบบนั้นน่ะ" },
+      {
+        speaker: "เอลเวอร์ลิน",
+        text: "เป็นไงบ้างพอดูรู้เรื่องมั้ย?",
+        choices: [
+          { label: "แล้วในเมืองมีอะไรบ้างงั้นหรอ?", reply: "อยากรู้ตรงไหนหรอ? ชี้ได้เลยนะ" },
+          { label: "อื้ม! เข้าใจแล้วล่ะ", reply: "อื้ม! ถ้าสงสัยอะไรตรงไหนก็ชี้ได้เลยนะ!" }
+        ]
+      }
+    ];
+
+    const speaker = document.getElementById("speaker");
+    const line = document.getElementById("line");
+    const counter = document.getElementById("counter");
+    const next = document.getElementById("next");
+    const choices = document.getElementById("choices");
+    const game = document.querySelector(".game");
+    const chatLauncher = document.getElementById("chat-launcher");
+    let sceneIndex = 0;
+    let chosenReply = "";
+
+    function renderScene() {
+      const scene = scenes[sceneIndex];
+      speaker.textContent = scene.speaker;
+      line.textContent = chosenReply || scene.text;
+      counter.textContent = `${sceneIndex + 1} / ${scenes.length}`;
+      choices.replaceChildren();
+      choices.hidden = !scene.choices || Boolean(chosenReply);
+      next.hidden = Boolean(scene.choices && !chosenReply);
+
+      if (scene.choices && !chosenReply) {
+        scene.choices.forEach((choice) => {
+          const button = document.createElement("button");
+          button.className = "choice";
+          button.type = "button";
+          button.textContent = choice.label;
+          button.addEventListener("click", () => {
+            chosenReply = choice.reply;
+            renderScene();
+          });
+          choices.append(button);
+        });
+      }
+
+      next.textContent = "ถัดไป　›";
+    }
+
+    function advance() {
+      if (choices.hidden === false) return;
+      if (sceneIndex === scenes.length - 1) {
+        game.classList.add("is-collapsed");
+        chatLauncher.focus();
+        return;
+      }
+      sceneIndex += 1;
+      chosenReply = "";
+      renderScene();
+    }
+
+    chatLauncher.addEventListener("click", () => {
+      sceneIndex = 0;
+      chosenReply = "";
+      renderScene();
+      game.classList.remove("is-collapsed");
+      next.focus();
+    });
+
+    next.addEventListener("click", advance);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        if (document.activeElement?.tagName === "BUTTON") return;
+        event.preventDefault();
+        advance();
+      }
+    });
+    document.querySelector(".stage").addEventListener("click", advance);
+
+    renderScene();
+  </script>
+</body>
+</html>
