@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="th">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,12 +8,14 @@
   <title>Visual Novel Demo</title>
   <style>
     :root {
-      color-scheme: dark;
       font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
       color: #fff;
+      background: transparent;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       min-height: 100vh;
@@ -20,6 +23,7 @@
       display: grid;
       place-items: center;
       padding: 20px;
+      background: transparent;
     }
 
     .game {
@@ -83,8 +87,15 @@
     }
 
     @keyframes appear {
-      from { opacity: 0; transform: translateY(18px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .dialogue {
@@ -125,7 +136,11 @@
       gap: 12px;
     }
 
-    .hint, .counter { color: #c9c4df; font-size: 0.82rem; }
+    .hint,
+    .counter {
+      color: #c9c4df;
+      font-size: 0.82rem;
+    }
 
     button {
       min-height: 42px;
@@ -138,14 +153,22 @@
       transition: transform 140ms ease, background 140ms ease;
     }
 
-    button:hover { transform: translateY(-2px); }
-    button:focus-visible { outline: 3px solid #f7d8ff; outline-offset: 3px; }
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:focus-visible {
+      outline: 3px solid #f7d8ff;
+      outline-offset: 3px;
+    }
 
     .next {
       background: #9266a8;
     }
 
-    .next:hover { background: #a77cbd; }
+    .next:hover {
+      background: #a77cbd;
+    }
 
     .choices {
       display: flex;
@@ -160,21 +183,47 @@
       text-align: left;
     }
 
-    .choice:hover { background: #51466f; }
+    .choice:hover {
+      background: #51466f;
+    }
 
     @media (max-width: 560px) {
-      body { padding: 10px; }
-      .stage { min-height: 390px; }
-      .character { left: 2%; width: 82%; height: 87%; }
-      .dialogue { margin: -2px 10px 10px; padding: 22px 16px 15px; }
-      .hint { display: none; }
+      body {
+        padding: 10px;
+      }
+
+      .stage {
+        min-height: 390px;
+      }
+
+      .character {
+        left: 2%;
+        width: 82%;
+        height: 87%;
+      }
+
+      .dialogue {
+        margin: -2px 10px 10px;
+        padding: 22px 16px 15px;
+      }
+
+      .hint {
+        display: none;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
+
 <body>
   <main class="game" aria-label="ตัวอย่างเกม Visual Novel">
     <section class="stage" aria-label="ฉากยามเย็น">
@@ -190,12 +239,13 @@
         <button class="next" id="next" type="button">ถัดไป　›</button>
       </div>
     </section>
-    <button class="chat-launcher" id="chat-launcher" type="button" aria-label="เปิดบทสนทนากับเอลเวอร์ลิน" title="คุยกับเอลเวอร์ลิน">
+    <button class="chat-launcher" id="chat-launcher" type="button" aria-label="เปิดบทสนทนากับเอลเวอร์ลิน"
+      title="คุยกับเอลเวอร์ลิน">
       <img src="Character/Elverlinicon.PNG" alt="">
     </button>
   </main>
   <script>
-    const scenes = [
+    const introScenes = [
       { speaker: "เอลเวอร์ลิน", text: "อ๊ะ!? นี่น่ะคือแผนที่ของเมืองนี้ยังไงล่ะ\nจริงสิ เมืองนี้มีชื่อว่า Dead Garden" },
       { speaker: "เอลเวอร์ลิน", text: "เอ่อ...มันถูกเรียกแบบนั้นน่ะ" },
       {
@@ -208,6 +258,60 @@
       }
     ];
 
+    const chatScenes = [
+      {
+        speaker: "เอลเวอร์ลิน", text: "หืม? อะไรๆ มีอะไรงั้นหรอ?",
+        choices: [
+          {
+            label: "คือว่า เธอชอบกินอะไรงั้นหรอ?",
+            reply: "เอ๋-- ก็...ขนมปังกับเนื้อสไลม์เปรี๊ยวหวานล่ะมั้ง",
+            followUp: {
+              speaker: "เอลเวอร์ลิน",
+              text: "เอ๋-- ก็...ขนมปังกับเนื้อสไลม์เปรี๊ยวหวานล่ะมั้ง",
+              choices: [
+                {
+                  label: "เมนูแปลกดีนะ", reply: "ไม่แปลกสักหน่อย!",
+                  followUp: {
+                    speaker: "เอลเวอร์ลิน", text: "แล้วเธอล่ะชอบกินอะไร!",
+                    choices: [
+                      { label: "ไก่สี่ปีกย่างเสียบไม้!", reply: "ชิ..." },
+                      { label: "สลัดแดนเพลิง", reply: "ชิ..." },
+                      { label: "เนื้อมังกรดินติดมัน", reply: "ชิ..." }]
+                  }
+                },
+                {
+                  label: "อ่อ ไม่เคยลองเลยแหะ", reply: "ถ้ามีโอกาส ไว้ไปกินด้วยกันนะ!",
+                  followUp: {
+                    speaker: "เอลเวอร์ลิน",
+                    text: "งั้นตกลงตามนี้นะ! ไว้เจอกันแล้วไปลองชิมด้วยกัน",
+                    choices: [
+                      { label: "ได้สิ", reply: "จัดไป!" },
+                      { label: "ถ้ามีโอกาสล่ะนะ", reply: "เดี๋ยวก็ได้รู้กัน จะทำให้กินไม่ไหวเลยคอยดู" }
+                    ]
+                  }
+                },
+
+              ]
+            }
+          }
+          , {
+            label: "ในกระเป๋านั่นอะไรน่ะ?",
+            reply: "อ๋อ ก็เสบียงไงล่ะ ส่วนใหญ่เป็นอาหารที่เก็บได้นานน่ะ",
+            followUp: {
+              speaker: "เอลเวอร์ลิน",
+              text: "เพราะว่าต้องเดินทางไกลตลอดน่ะนะ เลยต้องมีติดตัวไว้บ้าง",
+              choices: [
+                { label: "เป็นงั้นเองหรอ", reply: "อื้ม! กองทัพต้องเดินด้วยท้องไงล่ะ!" },
+                { label: "เดินทางไกลหรอ?", reply: "ก็แค่ไปสำรวจนู่นนี่น่ะนะ" }
+              ]
+            }
+          },
+          { label: "ไม่มีอะไร", close: true }
+        ]
+      }
+    ]
+
+    let activeScenes = introScenes;
     const speaker = document.getElementById("speaker");
     const line = document.getElementById("line");
     const counter = document.getElementById("counter");
@@ -217,12 +321,14 @@
     const chatLauncher = document.getElementById("chat-launcher");
     let sceneIndex = 0;
     let chosenReply = "";
+    let pendingFollowUp = null;
+    let introCompleted = false;
 
     function renderScene() {
-      const scene = scenes[sceneIndex];
+      const scene = activeScenes[sceneIndex];
       speaker.textContent = scene.speaker;
       line.textContent = chosenReply || scene.text;
-      counter.textContent = `${sceneIndex + 1} / ${scenes.length}`;
+      counter.textContent = `${sceneIndex + 1} / ${activeScenes.length}`;
       choices.replaceChildren();
       choices.hidden = !scene.choices || Boolean(chosenReply);
       next.hidden = Boolean(scene.choices && !chosenReply);
@@ -234,7 +340,12 @@
           button.type = "button";
           button.textContent = choice.label;
           button.addEventListener("click", () => {
+            if (choice.close) {
+              closeConversation();
+              return;
+            }
             chosenReply = choice.reply;
+            pendingFollowUp = choice.followUp || null;
             renderScene();
           });
           choices.append(button);
@@ -244,11 +355,24 @@
       next.textContent = "ถัดไป　›";
     }
 
+    function closeConversation() {
+      introCompleted = true;
+      game.classList.add("is-collapsed");
+      chatLauncher.focus();
+    }
+
     function advance() {
       if (choices.hidden === false) return;
-      if (sceneIndex === scenes.length - 1) {
-        game.classList.add("is-collapsed");
-        chatLauncher.focus();
+      if (pendingFollowUp) {
+        activeScenes = [pendingFollowUp];
+        sceneIndex = 0;
+        chosenReply = "";
+        pendingFollowUp = null;
+        renderScene();
+        return;
+      }
+      if (sceneIndex === activeScenes.length - 1) {
+        closeConversation();
         return;
       }
       sceneIndex += 1;
@@ -257,8 +381,10 @@
     }
 
     chatLauncher.addEventListener("click", () => {
+      activeScenes = introCompleted ? chatScenes : introScenes;
       sceneIndex = 0;
       chosenReply = "";
+      pendingFollowUp = null;
       renderScene();
       game.classList.remove("is-collapsed");
       next.focus();
@@ -277,4 +403,5 @@
     renderScene();
   </script>
 </body>
+
 </html>
